@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria Wygenerowanych Obrazów</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .image-card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .image-card:hover {
+            transform: scale(1.03);
+        }
+        .card-img-top {
+            height: 250px;
+            object-fit: cover;
+        }
+        .search-form {
+            margin-bottom: 30px;
+        }
+        .badge {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4 text-center">Galeria Wygenerowanych Obrazów</h1>
+        
+        <!-- Wyszukiwarka -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6">
+                <form class="search-form" th:action="@{/gallery}" method="get">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="search" placeholder="Wyszukaj obrazy..." th:value="${search}">
+                        <button class="btn btn-primary" type="submit">Szukaj</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="text-center mb-4">
+            <a th:href="@{/gallery}" class="btn btn-outline-primary me-2">Wszystkie</a>
+            <a th:href="@{/gallery?style=natural}" class="btn btn-outline-secondary me-2">Naturalne</a>
+            <a th:href="@{/gallery?style=vivid}" class="btn btn-outline-info">Żywe kolory</a>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4" th:each="image : ${images}">
+                <div class="card image-card">
+                    <img th:src="${image.imageUrl}" class="card-img-top" alt="Wygenerowany obraz">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${#strings.abbreviate(image.prompt, 50)}">Prompt</h5>
+                        <p class="card-text text-muted" th:text="${#temporals.format(image.createdAt, 'dd.MM.yyyy HH:mm')}">Data</p>
+                        <div>
+                            <span class="badge bg-primary" th:text="${image.style}">Styl</span>
+                            <span class="badge bg-secondary" th:text="${image.quality}">Jakość</span>
+                            <span class="badge bg-info" th:text="${image.size}">Rozmiar</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info text-center" th:if="${#lists.isEmpty(images)}">
+            Nie znaleziono żadnych obrazów. Wygeneruj nowe obrazy, aby zobaczyć je tutaj.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

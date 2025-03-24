@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Obrazów - Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 100px;
+            background-color: #f9f9f9;
+        }
+        .image-result {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .image-result img {
+            max-width: 100%;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        .nav-link {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .nav-link:hover {
+            background-color: #0b7dda;
+        }
+        .active {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Obrazów i Czatu - Demo</h1>
+        
+        <div class="nav-buttons">
+            <a href="/" class="nav-link active">Generator</a>
+            <a href="/gallery" class="nav-link">Galeria obrazów</a>
+        </div>
+        
+        <div class="section">
+            <h2>Generowanie Obrazu</h2>
+            <div class="form-group">
+                <label for="image-prompt">Opis obrazu:</label>
+                <textarea id="image-prompt" rows="3" placeholder="Wpisz opis obrazu, który chcesz wygenerować..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="image-size">Rozmiar:</label>
+                <select id="image-size">
+                    <option value="1024x1024">Kwadratowy (1024x1024)</option>
+                    <option value="1024x1792">Pionowy (1024x1792)</option>
+                    <option value="1792x1024">Poziomy (1792x1024)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="image-style">Styl:</label>
+                <select id="image-style">
+                    <option value="natural">Naturalny (realistyczny)</option>
+                    <option value="vivid">Żywy (kolorowy)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="image-quality">Jakość:</label>
+                <select id="image-quality">
+                    <option value="hd">Wysoka (HD)</option>
+                    <option value="standard">Standardowa</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="image-count">Liczba obrazów:</label>
+                <input type="number" id="image-count" min="1" max="1" value="1" readonly>
+                <small>Dla modelu DALL-E-3 można wygenerować tylko 1 obraz na żądanie</small>
+            </div>
+            <button id="generate-image-btn">Generuj Obraz</button>
+            <div class="result" id="image-result">
+                <div class="image-result"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Chat</h2>
+            <button id="chat-btn">Pokaż losowy żart</button>
+            <div class="result" id="chat-result"></div>
+        </div>
+
+        <div class="section">
+            <h2>Żart na konkretny temat</h2>
+            <div class="form-group">
+                <label for="joke-topic">Temat żartu:</label>
+                <input type="text" id="joke-topic" placeholder="Wpisz temat żartu..." value="programowanie">
+            </div>
+            <button id="joke-btn">Generuj żart na temat</button>
+            <div class="result" id="joke-result"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Wyślij obraz na email</h2>
+            <div class="form-group">
+                <label for="email-prompt">Opis obrazu:</label>
+                <textarea id="email-prompt" rows="3" placeholder="Wpisz opis obrazu, który chcesz wygenerować..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="email-size">Rozmiar:</label>
+                <select id="email-size">
+                    <option value="1024x1024">Kwadratowy (1024x1024)</option>
+                    <option value="1024x1792">Pionowy (1024x1792)</option>
+                    <option value="1792x1024">Poziomy (1792x1024)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="email-style">Styl:</label>
+                <select id="email-style">
+                    <option value="natural">Naturalny (realistyczny)</option>
+                    <option value="vivid">Żywy (kolorowy)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="email-address">Adres email:</label>
+                <input type="email" id="email-address" placeholder="Podaj adres email...">
+            </div>
+            <button id="email-image-btn">Wygeneruj i wyślij na email</button>
+            <div class="result" id="email-result"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('generate-image-btn').addEventListener('click', async () => {
+            const prompt = document.getElementById('image-prompt').value;
+            const size = document.getElementById('image-size').value;
+            const style = document.getElementById('image-style').value;
+            const quality = document.getElementById('image-quality').value;
+            const n = parseInt(document.getElementById('image-count').value);
+            
+            if (!prompt) {
+                alert('Proszę wpisać opis obrazu');
+                return;
+            }
+            
+            const resultDiv = document.querySelector('#image-result .image-result');
+            resultDiv.innerHTML = 'Generowanie obrazu...';
+            
+            try {
+                const response = await fetch('/images/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt, size, n, style, quality })
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = '';
+                
+                if (data.imageUrls && data.imageUrls.length > 0) {
+                    data.imageUrls.forEach(url => {
+                        const img = document.createElement('img');
+                        img.src = url;
+                        resultDiv.appendChild(img);
+                    });
+                } else {
+                    resultDiv.innerHTML = 'Nie udało się wygenerować obrazu.';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `Błąd: ${error.message}`;
+            }
+        });
+        
+        document.getElementById('chat-btn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('chat-result');
+            resultDiv.textContent = 'Ładowanie...';
+            
+            try {
+                const response = await fetch('/chat');
+                const data = await response.text();
+                resultDiv.textContent = data;
+            } catch (error) {
+                resultDiv.textContent = `Błąd: ${error.message}`;
+            }
+        });
+        
+        document.getElementById('joke-btn').addEventListener('click', async () => {
+            const topic = document.getElementById('joke-topic').value;
+            const resultDiv = document.getElementById('joke-result');
+            resultDiv.textContent = 'Ładowanie...';
+            
+            try {
+                const response = await fetch(`/joke?topic=${encodeURIComponent(topic)}`);
+                const data = await response.text();
+                resultDiv.textContent = data;
+            } catch (error) {
+                resultDiv.textContent = `Błąd: ${error.message}`;
+            }
+        });
+        
+        document.getElementById('email-image-btn').addEventListener('click', async () => {
+            const prompt = document.getElementById('email-prompt').value;
+            const size = document.getElementById('email-size').value;
+            const style = document.getElementById('email-style').value;
+            const email = document.getElementById('email-address').value;
+            
+            if (!prompt) {
+                alert('Proszę wpisać opis obrazu');
+                return;
+            }
+            
+            if (!email) {
+                alert('Proszę podać adres email');
+                return;
+            }
+            
+            if (!validateEmail(email)) {
+                alert('Proszę podać poprawny adres email');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('email-result');
+            resultDiv.textContent = 'Generowanie obrazu i wysyłanie emaila...';
+            
+            try {
+                const response = await fetch('/images/email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt, size, email, style })
+                });
+                
+                const data = await response.text();
+                resultDiv.textContent = data;
+            } catch (error) {
+                resultDiv.textContent = `Błąd: ${error.message}`;
+            }
+        });
+        
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+    </script>
+</body>
+</html> 
