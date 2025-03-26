@@ -5,68 +5,222 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galeria Wygenerowanych Obrazów</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .image-card {
-            margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s;
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
         }
-        .image-card:hover {
-            transform: scale(1.03);
+        .navbar {
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .card-img-top {
-            height: 250px;
-            object-fit: cover;
+        .navbar-brand {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 1200px;
+            padding: 2rem 1rem;
+        }
+        .page-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .page-title:after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 3px;
+            background: #3498db;
+            margin: 10px auto;
+            border-radius: 3px;
         }
         .search-form {
-            margin-bottom: 30px;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        .search-input {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        .btn-search {
+            background-color: #3498db;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-search:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+        .filter-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            border: 2px solid;
+        }
+        .filter-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        .image-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .card-img-top {
+            height: 300px;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+        .image-card:hover .card-img-top {
+            transform: scale(1.05);
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .card-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        .card-text {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
         }
         .badge {
-            margin-right: 5px;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        .badge-style {
+            background-color: #3498db;
+            color: white;
+        }
+        .badge-size {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .empty-state i {
+            font-size: 3rem;
+            color: #bdc3c7;
+            margin-bottom: 1rem;
+        }
+        .empty-state p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
         }
     </style>
 </head>
 <body>
-    <div class="container my-5">
-        <h1 class="mb-4 text-center">Galeria Wygenerowanych Obrazów</h1>
+    <nav class="navbar navbar-expand-lg navbar-light mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-image me-2"></i>Image API
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">Galeria Wygenerowanych Obrazów</h1>
         
         <!-- Wyszukiwarka -->
-        <div class="row justify-content-center mb-4">
-            <div class="col-md-6">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
                 <form class="search-form" th:action="@{/gallery}" method="get">
                     <div class="input-group">
-                        <input type="text" class="form-control" name="search" placeholder="Wyszukaj obrazy..." th:value="${search}">
-                        <button class="btn btn-primary" type="submit">Szukaj</button>
+                        <input type="text" class="form-control search-input" name="search" 
+                               placeholder="Wyszukaj obrazy po opisie..." th:value="${search}">
+                        <button class="btn btn-search text-white" type="submit">
+                            <i class="fas fa-search me-2"></i>Szukaj
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
         
-        <div class="text-center mb-4">
-            <a th:href="@{/gallery}" class="btn btn-outline-primary me-2">Wszystkie</a>
-            <a th:href="@{/gallery?style=natural}" class="btn btn-outline-secondary me-2">Naturalne</a>
-            <a th:href="@{/gallery?style=vivid}" class="btn btn-outline-info">Żywe kolory</a>
+        <!-- Filtry -->
+        <div class="filter-buttons">
+            <a th:href="@{/gallery}" 
+               class="btn btn-outline-primary filter-btn" 
+               th:classappend="${search == null && style == null} ? 'active'">
+                <i class="fas fa-th-large me-2"></i>Wszystkie
+            </a>
+            <a th:href="@{/gallery?style=natural}" 
+               class="btn btn-outline-primary filter-btn"
+               th:classappend="${style == 'natural'} ? 'active'">
+                <i class="fas fa-leaf me-2"></i>Naturalne
+            </a>
+            <a th:href="@{/gallery?style=vivid}" 
+               class="btn btn-outline-primary filter-btn"
+               th:classappend="${style == 'vivid'} ? 'active'">
+                <i class="fas fa-palette me-2"></i>Żywe kolory
+            </a>
         </div>
         
-        <div class="row">
-            <div class="col-md-4 mb-4" th:each="image : ${images}">
-                <div class="card image-card">
+        <!-- Galeria -->
+        <div class="row g-4">
+            <div class="col-md-4" th:each="image : ${images}">
+                <div class="image-card">
                     <img th:src="${image.imageUrl}" class="card-img-top" alt="Wygenerowany obraz">
                     <div class="card-body">
                         <h5 class="card-title" th:text="${#strings.abbreviate(image.prompt, 50)}">Prompt</h5>
-                        <p class="card-text text-muted" th:text="${#temporals.format(image.createdAt, 'dd.MM.yyyy HH:mm')}">Data</p>
+                        <p class="card-text">
+                            <i class="far fa-clock me-2"></i>
+                            <span th:text="${#temporals.format(image.createdAt, 'dd.MM.yyyy HH:mm')}">Data</span>
+                        </p>
                         <div>
-                            <span class="badge bg-primary" th:text="${image.style}">Styl</span>
-                            <span class="badge bg-secondary" th:text="${image.quality}">Jakość</span>
-                            <span class="badge bg-info" th:text="${image.size}">Rozmiar</span>
+                            <span class="badge badge-style" th:text="${image.style}">Styl</span>
+                            <span class="badge badge-size" th:text="${image.size}">Rozmiar</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="alert alert-info text-center" th:if="${#lists.isEmpty(images)}">
-            Nie znaleziono żadnych obrazów. Wygeneruj nowe obrazy, aby zobaczyć je tutaj.
+        <!-- Stan pusty -->
+        <div class="empty-state" th:if="${#lists.isEmpty(images)}">
+            <i class="fas fa-images"></i>
+            <p>Nie znaleziono żadnych obrazów. Wygeneruj nowe obrazy, aby zobaczyć je tutaj.</p>
         </div>
     </div>
 
