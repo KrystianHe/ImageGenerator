@@ -77,3 +77,7 @@ http://localhost:8080
 - `GET /api/images` - pobieranie wszystkich obrazów
 - `GET /api/jokes` - generowanie żartu
 - `GET /api/jokes/{topic}` - generowanie żartu na temat 
+
+
+
+DODATKOWE FUNKCJONALNOSCI W TRAKCIE DOKUMENTOWANIA
