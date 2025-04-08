@@ -4,735 +4,197 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Obrazów - Demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
+            background-color: #f5f5f5;
         }
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             background-color: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         h1 {
-            color: #2c3e50;
+            color: #333;
             text-align: center;
-            margin-bottom: 40px;
-            font-weight: 700;
-            font-size: 2.5rem;
         }
         .section {
-            margin-bottom: 40px;
-            padding: 30px;
-            border-radius: 15px;
-            display: none;
-            background: white;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e9ecef;
-        }
-        .section.active {
-            display: block;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 15px;
         }
         label {
             display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 1.1rem;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
         input, textarea, select {
             width: 100%;
-            padding: 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            font-size: 1rem;
-            background-color: #f8f9fa;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
-        input:focus, textarea:focus, select:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
-            outline: none;
-            background-color: white;
-        }
-        .button {
-            background-color: #3498db;
+        button {
+            background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 10px 15px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
+            font-size: 16px;
         }
-        .button:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
+        button:hover {
+            background-color: #45a049;
         }
         .result {
-            margin-top: 30px;
-            padding: 25px;
-            border-radius: 15px;
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
             min-height: 100px;
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background-color: #f9f9f9;
         }
         .image-result {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .image-result img {
-            width: 100%;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        .image-result img:hover {
-            transform: scale(1.03);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            max-width: 100%;
+            border-radius: 4px;
+            border: 1px solid #ddd;
         }
         .nav-buttons {
             display: flex;
             justify-content: center;
-            margin-bottom: 40px;
-            gap: 20px;
+            margin-bottom: 20px;
+            gap: 10px;
         }
         .nav-link {
             display: inline-block;
-            padding: 15px 30px;
-            background-color: #3498db;
+            padding: 10px 15px;
+            background-color: #2196F3;
             color: white;
             text-decoration: none;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            min-width: 180px;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s;
         }
         .nav-link:hover {
-            background-color: #2980b9;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            background-color: #0b7dda;
         }
         .active {
-            background-color: #2980b9;
-        }
-        .gallery-link {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            background-color: #2ecc71;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .gallery-link:hover {
-            background-color: #27ae60;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
-            color: white;
-        }
-        .email-section {
-            margin-top: 40px;
-            padding-top: 30px;
-            border-top: 2px solid #e9ecef;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 30px 0;
-        }
-        .loading i {
-            font-size: 3rem;
-            color: #3498db;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e9ecef;
-        }
-        .card-title {
-            color: #2c3e50;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-        .section-divider {
-            height: 2px;
-            background: linear-gradient(to right, transparent, #3498db, transparent);
-            margin: 40px 0;
-        }
-        .card-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
-        }
-        .card {
-            display: flex;
-            flex-direction: column;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            background-color: white;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            overflow: hidden;
-            height: 100%;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-        }
-        .card-image {
-            width: 100%;
-            height: 220px;
-            overflow: hidden;
-            position: relative;
-        }
-        .card-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        .card:hover .card-image img {
-            transform: scale(1.05);
-        }
-        .card-content {
-            padding: 15px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .prompt {
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 1rem;
-            color: #333;
-            line-height: 1.4;
-            max-height: 2.8em;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-        .style {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-bottom: 15px;
-        }
-        .card-actions {
-            margin-top: auto;
-            text-align: center;
-        }
-        .card .button {
-            width: 100%;
-            display: block;
-            text-align: center;
-            padding: 10px;
-            font-size: 0.9rem;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-        }
-        .card .button:hover {
-            transform: translateY(-2px);
-        }
-        .no-images {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 40px;
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            color: #6c757d;
-            font-style: italic;
-            font-size: 1.1rem;
-        }
-        .search-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 30px;
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        .search-form, .filter-form {
-            flex: 1;
-            min-width: 250px;
-        }
-        .search-input-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 8px;
-        }
-        .search-input-group input, .search-input-group select {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.95rem;
-        }
-        .search-input-group button {
-            width: auto;
-            min-width: 100px;
-            padding: 10px 15px;
-        }
-        .reset-filter {
-            display: inline-block;
-            text-align: center;
-            text-decoration: none;
-            padding: 12px 20px;
-            margin-top: 32px;
-            align-self: flex-end;
-        }
-        .button.secondary {
-            background-color: #95a5a6;
-            color: white;
-        }
-        .button.secondary:hover {
-            background-color: #7f8c8d;
-        }
-        .button-group {
-            display: flex;
-            gap: 15px;
-        }
-        .button-group button, .button-group .button {
-            flex: 1;
-        }
-        .submit-button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .submit-button:hover {
-            background-color: #2980b9;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        button:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            background-color: #0b7dda;
         }
     </style>
 </head>
 <body>
-    <a href="/gallery" class="gallery-link">
-        <i class="fas fa-images"></i> Galeria
-    </a>
-
     <div class="container">
-        <h1>Aplikacja AI generowanie obrazów, żartów, wysyłki generowynych zdjęc email oraz galeria wygenerowanych zdjęć
-        </h1>
-        
-        <!-- Ukryte pole z aktywną zakładką z serwera -->
-        <input type="hidden" id="server-active-tab" th:value="${activeTab}" />
+        <h1>API Obrazów i Czatu - Demo</h1>
         
         <div class="nav-buttons">
-            <a class="nav-link active" onclick="showSection('images')">Generowanie Zdjęć</a>
-            <a class="nav-link" onclick="showSection('jokes')">Żarty</a>
-            <a class="nav-link" onclick="showSection('gifs')">GIF-y</a>
-            <a class="nav-link" onclick="showSection('email')">Email</a>
-            <a class="nav-link" onclick="showSection('gallery')">Galeria</a>
+            <a href="/" class="nav-link active">Generator</a>
+            <a href="/gallery" class="nav-link">Galeria obrazów</a>
+            <a href="/text-analysis" class="nav-link">Analiza tekstu</a>
+            <a href="/gif-generator" class="nav-link">Generator GIF</a>
         </div>
-
-        <div id="images" class="section active">
-            <div class="card">
-                <h2 class="card-title">Generowanie Obrazu</h2>
-                <div class="form-group">
-                    <label for="image-prompt">Opis obrazu:</label>
-                    <textarea id="image-prompt" rows="3" placeholder="Wpisz opis obrazu, który chcesz wygenerować..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="image-size">Rozmiar:</label>
-                    <select id="image-size">
-                        <option value="1024x1024">Kwadratowy (1024x1024)</option>
-                        <option value="1024x1792">Pionowy (1024x1792)</option>
-                        <option value="1792x1024">Poziomy (1792x1024)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="image-style">Styl:</label>
-                    <select id="image-style">
-                        <option value="natural">Naturalny (realistyczny)</option>
-                        <option value="vivid">Żywy (kolorowy)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="image-quality">Jakość:</label>
-                    <select id="image-quality">
-                        <option value="hd">Wysoka (HD)</option>
-                        <option value="standard">Standardowa</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="image-count">Liczba obrazów:</label>
-                    <input type="number" id="image-count" min="1" max="1" value="1" readonly>
-                    <small>Dla modelu DALL-E-3 można wygenerować tylko 1 obraz na żądanie</small>
-                </div>
-                <button id="generate-image-btn">Generuj Obraz</button>
-                <div class="result" id="image-result">
-                    <div class="image-result"></div>
-                </div>
+        
+        <div class="section">
+            <h2>Generowanie Obrazu</h2>
+            <div class="form-group">
+                <label for="image-prompt">Opis obrazu:</label>
+                <textarea id="image-prompt" rows="3" placeholder="Wpisz opis obrazu, który chcesz wygenerować..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="image-size">Rozmiar:</label>
+                <select id="image-size">
+                    <option value="1024x1024">Kwadratowy (1024x1024)</option>
+                    <option value="1024x1792">Pionowy (1024x1792)</option>
+                    <option value="1792x1024">Poziomy (1792x1024)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="image-style">Styl:</label>
+                <select id="image-style">
+                    <option value="natural">Naturalny (realistyczny)</option>
+                    <option value="vivid">Żywy (kolorowy)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="image-quality">Jakość:</label>
+                <select id="image-quality">
+                    <option value="hd">Wysoka (HD)</option>
+                    <option value="standard">Standardowa</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="image-count">Liczba obrazów:</label>
+                <input type="number" id="image-count" min="1" max="1" value="1" readonly>
+                <small>Dla modelu DALL-E-3 można wygenerować tylko 1 obraz na żądanie</small>
+            </div>
+            <button id="generate-image-btn">Generuj Obraz</button>
+            <div class="result" id="image-result">
+                <div class="image-result"></div>
             </div>
         </div>
-
-        <div id="jokes" class="section">
-            <div class="card">
-                <h2 class="card-title">Generator Żartów</h2>
-                <div class="form-group">
-                    <label for="joke-topic">Temat żartu:</label>
-                    <input type="text" id="joke-topic" placeholder="Wpisz temat żartu..." value="programowanie">
-                </div>
-                <button id="joke-btn">Generuj żart na temat</button>
-                <div class="result" id="joke-result"></div>
-            </div>
-            
-            <div class="section-divider"></div>
-            
-            <div class="card">
-                <h2 class="card-title">Losowy Żart</h2>
-                <button id="chat-btn">Pokaż losowy żart</button>
-                <div class="result" id="chat-result"></div>
-            </div>
+        
+        <div class="section">
+            <h2>Chat</h2>
+            <button id="chat-btn">Pokaż losowy żart</button>
+            <div class="result" id="chat-result"></div>
         </div>
 
-        <div id="gifs" class="section" style="display: none;">
-            <div class="card">
-                <h2 class="card-title">Generator GIF-ów</h2>
-                <div class="form-group">
-                    <label for="gifPrompt">Opis GIF-a:</label>
-                    <textarea id="gifPrompt" class="form-control" rows="3" placeholder="Wpisz opis GIF-a, który chcesz wygenerować..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="gifStyle">Styl:</label>
-                    <select id="gifStyle" class="form-select">
-                        <option value="natural">Naturalny (realistyczny)</option>
-                        <option value="vivid">Żywy (kolorowy)</option>
-                    </select>
-                </div>
-                <button id="generateGifBtn" class="btn btn-primary">Generuj GIF</button>
-                
-                <!-- Komunikat o ładowaniu -->
-                <div id="gifLoading" class="loading" style="display: none;">
-                    <i class="fas fa-spinner"></i>
-                    <p>Generowanie GIF-a...</p>
-                </div>
-                
-                <!-- Wynik generowania -->
-                <div id="gifResult" class="result" style="display: none;">
-                    <div class="text-center">
-                        <img id="generatedGif" src="" alt="Wygenerowany GIF" style="max-width: 100%; border-radius: 10px;">
-                    </div>
-                </div>
-                
-                <!-- Komunikat o błędzie -->
-                <div id="gifError" class="alert alert-danger mt-3" style="display: none;">
-                    <p id="gifErrorMessage"></p>
-                </div>
+        <div class="section">
+            <h2>Żart na konkretny temat</h2>
+            <div class="form-group">
+                <label for="joke-topic">Temat żartu:</label>
+                <input type="text" id="joke-topic" placeholder="Wpisz temat żartu..." value="programowanie">
             </div>
+            <button id="joke-btn">Generuj żart na temat</button>
+            <div class="result" id="joke-result"></div>
         </div>
-
-        <!-- Sekcja galerii -->
-        <div id="gallery" class="section" style="display: none;">
-            <div class="card">
-                <h2 class="card-title">Galeria wygenerowanych obrazów</h2>
-                
-                <!-- Formularz wyszukiwania -->
-                <div class="search-options">
-                    <form action="/gallery" method="get" class="search-form">
-                        <div class="form-group">
-                            <label for="search-prompt">Szukaj po opisie:</label>
-                            <div class="search-input-group">
-                                <input type="text" id="search-prompt" name="prompt" 
-                                       th:value="${currentPrompt}" 
-                                       placeholder="Wpisz opis obrazu..." />
-                                <button type="submit">Szukaj</button>
-                            </div>
-                        </div>
-                    </form>
-                    
-                    <form action="/gallery" method="get" class="filter-form">
-                        <div class="form-group">
-                            <label for="filter-style">Filtruj po stylu:</label>
-                            <div class="search-input-group">
-                                <select id="filter-style" name="style">
-                                    <option value="">Wszystkie style</option>
-                                    <option th:each="style : ${availableStyles}" 
-                                            th:value="${style}" 
-                                            th:text="${style}" 
-                                            th:selected="${style == currentStyle}">Styl</option>
-                                </select>
-                                <button type="submit">Filtruj</button>
-                            </div>
-                        </div>
-                    </form>
-                    
-                    <a href="/gallery" class="button reset-filter">Pokaż wszystko</a>
-                </div>
-                
-                <!-- Wyświetlanie obrazów -->
-                <div class="card-container">
-                    <div th:if="${images != null && !images.isEmpty()}" th:each="image : ${images}" class="card">
-                        <div class="card-image">
-                            <img th:src="@{'/images/' + ${image.id}}" 
-                                 th:alt="${image.prompt}"
-                                 th:data-base64="${image.imageData}"
-                                 th:data-content-type="${image.contentType}"
-                                 onerror="handleImageError(this)"/>
-                        </div>
-                        <div class="card-content">
-                            <p class="prompt" th:text="${image.prompt}">Opis obrazu</p>
-                            <p class="style" th:if="${image.style}" th:text="'Styl: ' + ${image.style}">Styl: vivid</p>
-                            <div class="card-actions">
-                                <a th:href="@{/email/show(imageId=${image.id})}" class="button">Wyślij e-mail</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div th:if="${images == null || images.isEmpty()}" class="no-images">
-                        <p>Brak obrazów w galerii.</p>
-                    </div>
-                </div>
+        
+        <div class="section">
+            <h2>Wyślij obraz na email</h2>
+            <div class="form-group">
+                <label for="email-prompt">Opis obrazu:</label>
+                <textarea id="email-prompt" rows="3" placeholder="Wpisz opis obrazu, który chcesz wygenerować..."></textarea>
             </div>
-        </div>
-
-        <!-- Sekcja wysyłania obrazu emailem -->
-        <div id="email" class="container mt-4" style="display: none;">
-            <h2>Wyślij wygenerowany obraz emailem</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <form id="emailForm">
-                                <div class="mb-3">
-                                    <label for="emailPrompt" class="form-label">Opis obrazu:</label>
-                                    <textarea id="emailPrompt" name="prompt" class="form-control" rows="3" required></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="emailAddress" class="form-label">Adres email:</label>
-                                    <input type="email" id="emailAddress" name="email" class="form-control" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="emailStyle" class="form-label">Styl:</label>
-                                    <select id="emailStyle" name="style" class="form-select">
-                                        <option value="natural">Naturalny</option>
-                                        <option value="vivid">Żywy</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="emailSize" class="form-label">Rozmiar:</label>
-                                    <select id="emailSize" name="size" class="form-select">
-                                        <option value="1024x1024">1024x1024</option>
-                                        <option value="1024x1792">1024x1792</option>
-                                        <option value="1792x1024">1792x1024</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="emailQuality" class="form-label">Jakość:</label>
-                                    <select id="emailQuality" name="quality" class="form-select">
-                                        <option value="standard">Standard</option>
-                                        <option value="hd">HD</option>
-                                    </select>
-                                </div>
-                                <div class="form-group button-group">
-                                    <button type="button" id="sendEmailBtn" class="btn btn-primary">Wyślij Email</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div id="emailResult" class="alert alert-success" style="display: none;">
-                        <p id="emailSuccessMessage"></p>
-                    </div>
-                    <div id="emailError" class="alert alert-danger" style="display: none;">
-                        <p id="emailErrorMessage"></p>
-                    </div>
-                </div>
+            <div class="form-group">
+                <label for="email-size">Rozmiar:</label>
+                <select id="email-size">
+                    <option value="1024x1024">Kwadratowy (1024x1024)</option>
+                    <option value="1024x1792">Pionowy (1024x1792)</option>
+                    <option value="1792x1024">Poziomy (1792x1024)</option>
+                </select>
             </div>
-        </div>
-
-        <!-- Formularz wysyłania obrazu emailem -->
-        <div id="email-form" class="section" style="display: none;" th:if="${imageId != null}">
-            <div class="card">
-                <h2 class="card-title">Wyślij obraz emailem</h2>
-                
-                <div th:if="${image != null}" class="text-center mb-4">
-                    <img th:src="@{'/images/' + ${image.id}}" 
-                         th:alt="${image.prompt}"
-                         th:data-base64="${image.imageData}"
-                         th:data-content-type="${image.contentType}"
-                         style="max-width: 400px; border-radius: 8px;"
-                         onerror="handleImageError(this)" />
-                    <p class="mt-2" th:text="${image.prompt}">Opis obrazu</p>
-                </div>
-                
-                <form th:action="@{/email/send}" method="post">
-                    <input type="hidden" name="imageId" th:value="${imageId}" />
-                    
-                    <div class="form-group">
-                        <label for="email-address-form">Adres email:</label>
-                        <input type="email" id="email-address-form" name="email" required 
-                               placeholder="Podaj adres email odbiorcy..." />
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="email-message">Wiadomość (opcjonalnie):</label>
-                        <textarea id="email-message" name="message" rows="3" 
-                                  placeholder="Dodaj wiadomość do emaila..."></textarea>
-                    </div>
-                    
-                    <div class="form-group button-group">
-                        <button type="submit" class="submit-button">Wyślij</button>
-                        <a th:href="@{/gallery}" class="button secondary">Anuluj</a>
-                    </div>
-                </form>
+            <div class="form-group">
+                <label for="email-style">Styl:</label>
+                <select id="email-style">
+                    <option value="natural">Naturalny (realistyczny)</option>
+                    <option value="vivid">Żywy (kolorowy)</option>
+                </select>
             </div>
+            <div class="form-group">
+                <label for="email-address">Adres email:</label>
+                <input type="email" id="email-address" placeholder="Podaj adres email...">
+            </div>
+            <button id="email-image-btn">Wygeneruj i wyślij na email</button>
+            <div class="result" id="email-result"></div>
         </div>
     </div>
 
     <script>
-        function showSection(sectionId) {
-            // Ukryj wszystkie sekcje
-            document.querySelectorAll('.section, #gifs, #gallery, #email, #email-form').forEach(section => {
-                section.style.display = 'none';
-            });
-            
-            // Pokaż wybraną sekcję
-            if (sectionId === 'gifs') {
-                document.getElementById('gifs').style.display = 'block';
-            } else if (sectionId === 'gallery') {
-                document.getElementById('gallery').style.display = 'block';
-            } else if (sectionId === 'email') {
-                document.getElementById('email').style.display = 'block';
-            } else if (sectionId === 'email-form') {
-                document.getElementById('email-form').style.display = 'block';
-            } else {
-                document.getElementById(sectionId).classList.add('active');
-                document.getElementById(sectionId).style.display = 'block';
-            }
-            
-            // Aktualizuj aktywny link
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            
-            // Znajdź i aktywuj odpowiedni link (pomijamy email-form, bo to nie jest główna zakładka)
-            if (sectionId !== 'email-form') {
-                const links = document.querySelectorAll('.nav-link');
-                for (let i = 0; i < links.length; i++) {
-                    if (links[i].getAttribute('onclick').includes(sectionId)) {
-                        links[i].classList.add('active');
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Inicjalizacja - sprawdza parametry z serwera i ustawia odpowiednią zakładkę
-        document.addEventListener('DOMContentLoaded', function() {
-            // Sprawdź czy mamy aktywną zakładkę przekazaną z serwera (Thymeleaf)
-            // Wartość zmiennej activeTab będzie dostępna z Thymeleaf
-            let serverActiveTab = '';
-            try {
-                // Pobierz aktywną zakładkę z ukrytego pola jeśli istnieje
-                const activeTabElement = document.getElementById('server-active-tab');
-                if (activeTabElement) {
-                    serverActiveTab = activeTabElement.value;
-                    console.log('Wykryto aktywną zakładkę z serwera:', serverActiveTab);
-                }
-            } catch (e) {
-                console.error('Błąd podczas pobierania aktywnej zakładki:', e);
-            }
-            
-            // Sprawdź czy mamy ID obrazu do wysłania mailem
-            const emailForm = document.getElementById('email-form');
-            if (emailForm && emailForm.style.display !== 'none' && document.querySelector('[name="imageId"]') !== null) {
-                console.log('Pokazuję formularz email');
-                showSection('email-form');
-            } 
-            // Jeśli mamy aktywną zakładkę z serwera, pokaż ją
-            else if (serverActiveTab && ['images', 'jokes', 'gifs', 'gallery', 'email'].includes(serverActiveTab)) {
-                console.log('Pokazuję zakładkę z serwera:', serverActiveTab);
-                showSection(serverActiveTab);
-            } 
-            // W przeciwnym razie pokaż domyślną zakładkę
-            else {
-                console.log('Pokazuję domyślną zakładkę: images');
-                showSection('images');
-            }
-            
-            // Sprawdź czy mamy komunikat błędu lub sukcesu
-            const urlParams = new URLSearchParams(window.location.search);
-            const error = urlParams.get('error');
-            const message = urlParams.get('message');
-            
-            if (error) {
-                alert('Błąd: ' + error);
-            } else if (message) {
-                alert('Sukces: ' + message);
-            }
-        });
-
         document.getElementById('generate-image-btn').addEventListener('click', async () => {
             const prompt = document.getElementById('image-prompt').value;
             const size = document.getElementById('image-size').value;
@@ -800,95 +262,7 @@
                 resultDiv.textContent = `Błąd: ${error.message}`;
             }
         });
-
-        document.getElementById('generateGifBtn').addEventListener('click', async function() {
-            const prompt = document.getElementById('gifPrompt').value;
-            const style = document.getElementById('gifStyle').value;
-            
-            if (!prompt) {
-                alert('Proszę wpisać opis GIF-a');
-                return;
-            }
-            
-            // Pokaż komunikat o ładowaniu
-            if (document.getElementById('gifLoading')) {
-                document.getElementById('gifLoading').style.display = 'block';
-            }
-            
-            document.getElementById('gifResult').style.display = 'none';
-            document.getElementById('gifError').style.display = 'none';
-            document.getElementById('generatedGif').src = '';
-            document.getElementById('generatedGif').alt = 'Generowanie GIF-a...';
-            
-            console.log('Wysyłanie żądania generowania GIF:', {
-                prompt, style
-            });
-            
-            try {
-                const response = await fetch('/gifs/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        prompt: prompt,
-                        style: style
-                    })
-                });
-                
-                // Ukryj komunikat o ładowaniu
-                if (document.getElementById('gifLoading')) {
-                    document.getElementById('gifLoading').style.display = 'none';
-                }
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error('Błąd serwera: ' + errorText);
-                }
-                
-                const data = await response.json();
-                console.log('Odpowiedź GIF:', data);
-                
-                if (data.error) {
-                    document.getElementById('gifError').style.display = 'block';
-                    document.getElementById('gifErrorMessage').textContent = data.error;
-                } else {
-                    // Najpierw spróbuj użyć danych base64, jeśli są dostępne
-                    if (data.base64Image) {
-                        console.log('Ustawianie GIF-a z danych base64');
-                        document.getElementById('generatedGif').src = data.base64Image;
-                    } else {
-                        console.log('Ustawianie GIF-a z URL:', data.url);
-                        document.getElementById('generatedGif').src = data.url;
-                    }
-                    
-                    document.getElementById('generatedGif').alt = 'Wygenerowany GIF';
-                    document.getElementById('gifResult').style.display = 'block';
-                    
-                    // Dodaj obsługę błędów ładowania obrazu
-                    document.getElementById('generatedGif').onerror = function() {
-                        console.error('Błąd ładowania GIF-a z:', this.src);
-                        
-                        // Jeśli używamy URL i zawodzi, spróbuj użyć base64
-                        if (this.src.startsWith('http') && data.base64Image) {
-                            console.log('Próba użycia alternatywnych danych base64');
-                            this.src = data.base64Image;
-                        } else {
-                            document.getElementById('gifError').style.display = 'block';
-                            document.getElementById('gifErrorMessage').textContent = 'Nie udało się załadować wygenerowanego GIF-a.';
-                        }
-                    };
-                }
-            } catch (error) {
-                console.error('Błąd:', error);
-                if (document.getElementById('gifLoading')) {
-                    document.getElementById('gifLoading').style.display = 'none';
-                }
-                document.getElementById('gifError').style.display = 'block';
-                document.getElementById('gifErrorMessage').textContent = 'Wystąpił błąd: ' + error.message;
-            }
-        });
-
+        
         document.getElementById('email-image-btn').addEventListener('click', async () => {
             const prompt = document.getElementById('email-prompt').value;
             const size = document.getElementById('email-size').value;
@@ -919,13 +293,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ 
-                        prompt, 
-                        size, 
-                        email, 
-                        style,
-                        quality: "standard" 
-                    })
+                    body: JSON.stringify({ prompt, size, email, style })
                 });
                 
                 const data = await response.text();
@@ -939,102 +307,6 @@
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return re.test(email);
         }
-
-        document.getElementById('sendEmailBtn').addEventListener('click', function() {
-            const prompt = document.getElementById('emailPrompt').value;
-            const email = document.getElementById('emailAddress').value;
-            const style = document.getElementById('emailStyle').value;
-            const size = document.getElementById('emailSize').value;
-            const quality = document.getElementById('emailQuality').value;
-            
-            if (!prompt) {
-                showEmailError('Opis obrazu jest wymagany');
-                return;
-            }
-            
-            if (!email) {
-                showEmailError('Adres email jest wymagany');
-                return;
-            }
-            
-            if (!validateEmail(email)) {
-                showEmailError('Podaj poprawny adres email');
-                return;
-            }
-            
-            // Ukryj poprzednie komunikaty
-            document.getElementById('emailResult').style.display = 'none';
-            document.getElementById('emailError').style.display = 'none';
-            
-            // Pokaż komunikat o ładowaniu
-            showEmailMessage('Generowanie i wysyłanie obrazu...', 'info');
-            
-            console.log('Wysyłanie żądania emaila z danymi:', {
-                prompt, email, style, size, quality
-            });
-            
-            // Wyślij żądanie AJAX
-            fetch('/images/email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    prompt: prompt,
-                    email: email,
-                    style: style,
-                    size: size,
-                    quality: quality
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => { throw new Error(text) });
-                }
-                return response.text();
-            })
-            .then(data => {
-                console.log('Sukces:', data);
-                showEmailSuccess(data);
-            })
-            .catch(error => {
-                console.error('Błąd:', error);
-                showEmailError('Wystąpił błąd: ' + error.message);
-            });
-        });
-
-        function showEmailSuccess(message) {
-            document.getElementById('emailSuccessMessage').textContent = message;
-            document.getElementById('emailResult').style.display = 'block';
-            document.getElementById('emailError').style.display = 'none';
-        }
-
-        function showEmailError(message) {
-            document.getElementById('emailErrorMessage').textContent = message;
-            document.getElementById('emailError').style.display = 'block';
-            document.getElementById('emailResult').style.display = 'none';
-        }
-
-        function showEmailMessage(message, type) {
-            if (type === 'info') {
-                showEmailSuccess(message);
-            } else {
-                showEmailError(message);
-            }
-        }
-
-        function handleImageError(img) {
-            console.error("Błąd ładowania obrazu:", img.src);
-            
-            if (img.dataset.base64) {
-                console.log("Próba użycia danych base64");
-                img.src = "data:" + (img.dataset.contentType || "image/png") + ";base64," + img.dataset.base64;
-            } else {
-                console.log("Brak danych base64, wyświetlam obraz zastępczy");
-                img.src = "/images/placeholder.png";
-                img.alt = "Obraz niedostępny";
-            }
-        }
     </script>
 </body>
-</html>
+</html> 

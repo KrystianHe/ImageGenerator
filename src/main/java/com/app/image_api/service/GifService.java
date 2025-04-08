@@ -1,7 +1,11 @@
 package com.app.image_api.service;
 
 import com.app.image_api.config.OpenAiConfig;
+import com.app.image_api.model.GeneratedGif;
 import com.app.image_api.model.GeneratedImage;
+import com.app.image_api.model.GifGenerationRequest;
+import com.app.image_api.model.GifGenerationResponse;
+import com.app.image_api.repository.GifRepository;
 import com.app.image_api.repository.ImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -12,13 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.*;
-
-// Bezpośrednie importy zamiast javax.imageio.*
 import javax.imageio.ImageIO;
 import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.ImageWriter;
@@ -27,112 +24,136 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 public class GifService {
 
     private final OpenAiConfig openAiConfig;
     private final ImageRepository imageRepository;
+    private final GifRepository gifRepository;
     private final RestTemplate restTemplate;
+    private final String tempDir = System.getProperty("java.io.tmpdir");
 
     @Autowired
-    public GifService(OpenAiConfig openAiConfig, ImageRepository imageRepository, RestTemplate restTemplate) {
+    public GifService(OpenAiConfig openAiConfig, ImageRepository imageRepository, GifRepository gifRepository, RestTemplate restTemplate) {
         this.openAiConfig = openAiConfig;
         this.imageRepository = imageRepository;
+        this.gifRepository = gifRepository;
         this.restTemplate = restTemplate;
     }
 
-    public GeneratedImage generateGif(String prompt, String style) {
+    // Nowa metoda dla nowego interfejsu zgodna z GifGenerationRequest/Response
+    public GifGenerationResponse generateGif(GifGenerationRequest request) throws IOException {
+        long startTime = System.currentTimeMillis();
+        
+        // Konwersja stylu na format kompatybilny z API OpenAI
+        String openAiStyle = convertStyle(request.getStyle());
+        
+        // Ulepszone promptowanie dla GIF-ów
+        String enhancedPrompt = enhancePromptForGifGeneration(request.getPrompt(), request.getStyle());
+        
+        System.out.println("Generowanie GIF-a dla opisu: " + enhancedPrompt);
+        
         try {
-            // Przygotowanie żądania HTTP
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(openAiConfig.getApiKey());
-
-            // Dodajemy informację o animacji do prompta
-            String enhancedPrompt = prompt + " (pokazane jako animacja w stylu GIF)";
-
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "dall-e-3");
-            requestBody.put("prompt", enhancedPrompt);
-            requestBody.put("size", "1024x1024");
-            requestBody.put("n", 1);
-            requestBody.put("quality", "standard");
-            requestBody.put("style", style);
-            requestBody.put("response_format", "b64_json");
-
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-
-            System.out.println("Wysyłanie żądania generowania GIF: " + enhancedPrompt);
-
-            // Wysłanie żądania do API DALL-E
-            ResponseEntity<Map> response = restTemplate.exchange(
-                "https://api.openai.com/v1/images/generations",
-                HttpMethod.POST,
-                requestEntity,
-                Map.class
+            // Generowanie bazowego obrazu
+            GeneratedImage baseImage = generateSingleImage(enhancedPrompt, openAiStyle);
+            
+            if (baseImage == null) {
+                throw new RuntimeException("Nie udało się wygenerować bazowego obrazu dla GIF-a");
+            }
+            
+            // Pobieranie danych obrazu
+            String base64ImageData = baseImage.getImageData();
+            if (base64ImageData == null || base64ImageData.isEmpty()) {
+                throw new RuntimeException("Brak danych obrazu bazowego");
+            }
+            
+            // Tworzenie animacji na podstawie bazowego obrazu
+            String animatedGifBase64 = createAnimatedGifWithMotion(base64ImageData, request.getFramesCount(), request.getFrameDuration());
+            
+            // Zapisanie GIF-a do pliku tymczasowego
+            String gifPath = tempDir + "/gif_" + UUID.randomUUID().toString() + ".gif";
+            byte[] decodedGif = Base64.getDecoder().decode(animatedGifBase64);
+            Files.write(Path.of(gifPath), decodedGif);
+            
+            // Zapisanie informacji o GIF-ie w bazie danych
+            GeneratedGif gif = new GeneratedGif();
+            gif.setPrompt(request.getPrompt());
+            gif.setStyle(request.getStyle());
+            gif.setSize(request.getSize());
+            gif.setQuality(request.getQuality());
+            gif.setFramesCount(request.getFramesCount());
+            gif.setGifUrl("file://" + gifPath);
+            gif.setCreatedAt(LocalDateTime.now());
+            
+            gifRepository.save(gif);
+            
+            long endTime = System.currentTimeMillis();
+            
+            // Zwracanie odpowiedzi
+            return new GifGenerationResponse(
+                    "file://" + gifPath,
+                    animatedGifBase64,
+                    request.getFramesCount(),
+                    request.getPrompt(),
+                    endTime - startTime
             );
-
-            Map<String, Object> responseBody = response.getBody();
-            System.out.println("Otrzymano odpowiedź od API: " + (responseBody != null));
+        } catch (Exception e) {
+            System.out.println("Błąd podczas generowania GIF-a: " + e.getMessage());
+            e.printStackTrace();
             
-            if (responseBody != null && responseBody.containsKey("data")) {
-                List<Map<String, Object>> data = (List<Map<String, Object>>) responseBody.get("data");
-                if (!data.isEmpty()) {
-                    Map<String, Object> imageData = data.get(0);
-                    String base64Image = (String) imageData.get("b64_json");
+            // Próba wygenerowania pojedynczego obrazu jako fallback
+            try {
+                GeneratedImage fallbackImage = generateSingleImage(
+                        enhancedPrompt + ", high detail, 8k, photorealistic", 
+                        openAiStyle
+                );
+                
+                if (fallbackImage != null && fallbackImage.getImageData() != null) {
+                    long endTime = System.currentTimeMillis();
                     
-                    if (base64Image != null) {
-                        System.out.println("Otrzymano dane obrazu w formacie base64, długość: " + base64Image.length() + " znaków");
-                        
-                        try {
-                            GeneratedImage image = new GeneratedImage();
-                            image.setPrompt(prompt);
-                            image.setStyle(style);
-                            image.setFileName(UUID.randomUUID().toString() + ".png");
-                            image.setImageData(base64Image);
-                            image.setContentType("image/png");
-                            image.setSize("1024x1024");
-                            image.setQuality("standard");
-                            
-                            GeneratedImage savedImage = imageRepository.save(image);
-                            System.out.println("Zapisano obraz w bazie danych z ID=" + savedImage.getId());
-                            return savedImage;
-                        } catch (Exception e) {
-                            System.out.println("Błąd podczas zapisywania obrazu: " + e.getMessage());
-                            e.printStackTrace();
-                            throw e;
-                        }
-                    }
+                    // Zapisanie informacji o GIF-ie w bazie danych (chociaż to pojedynczy obraz)
+                    GeneratedGif gif = new GeneratedGif();
+                    gif.setPrompt(request.getPrompt() + " (pojedyncza klatka)");
+                    gif.setStyle(request.getStyle());
+                    gif.setSize(request.getSize());
+                    gif.setQuality(request.getQuality());
+                    gif.setFramesCount(1);
+                    gif.setGifUrl("fallback-image");
+                    gif.setCreatedAt(LocalDateTime.now());
+                    
+                    gifRepository.save(gif);
+                    
+                    return new GifGenerationResponse(
+                            "fallback-image",
+                            fallbackImage.getImageData(),
+                            1,
+                            request.getPrompt() + " (pojedyncza klatka)",
+                            endTime - startTime
+                    );
                 }
+            } catch (Exception fallbackError) {
+                System.out.println("Nie udało się wygenerować nawet pojedynczego obrazu: " + fallbackError.getMessage());
             }
             
-            System.out.println("Nie udało się wygenerować GIF-a, brak danych w odpowiedzi API");
-            throw new RuntimeException("Nie udało się wygenerować GIF-a");
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Błąd podczas generowania GIF-a: " + e.getMessage());
+            throw new IOException("Nie udało się wygenerować GIF-a: " + e.getMessage());
         }
     }
 
-    // Metoda alternatywna, jeśli główna metoda tworzenia GIF-ów zawiedzie
-    private String createSimpleGif(List<String> base64Images) {
-        try {
-            // Jeśli nie możemy utworzyć animowanego GIF-a, po prostu zwracamy pierwszy obraz
-            // ale ustawiamy typ zawartości jako image/gif
-            System.out.println("Używam uproszczonej metody tworzenia GIF-a (tylko jeden obraz)");
-            if (!base64Images.isEmpty()) {
-                return base64Images.get(0);
-            } else {
-                throw new RuntimeException("Brak danych obrazu");
-            }
-        } catch (Exception e) {
-            System.out.println("Błąd w createSimpleGif: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Nie udało się utworzyć prostego GIF-a", e);
-        }
-    }
-    
+    // Istniejące metody z twojej klasy
     public GeneratedImage createGif(String prompt, int frames, String style) {
         System.out.println("Wywołano createGif z opisem: '" + prompt + "', styl: " + style + ", klatek: " + frames);
         
@@ -148,13 +169,22 @@ public class GifService {
             
             GeneratedImage baseImage = generateSingleImage(enhancedPrompt, style);
             
-            if (baseImage == null || baseImage.getImageData() == null) {
+            if (baseImage == null) {
                 throw new RuntimeException("Nie udało się wygenerować bazowego obrazu dla GIF-a");
+            }
+            
+            // Pobieranie danych obrazu
+            String base64ImageData = baseImage.getImageData();
+            if (base64ImageData == null || base64ImageData.isEmpty()) {
+                throw new RuntimeException("Brak danych obrazu bazowego");
             }
             
             System.out.println("Wygenerowano bazowy obraz, tworzenie animacji");
             
-            String animatedGifBase64 = createAnimatedGifWithMotion(baseImage.getImageData(), frames);
+            // Używamy domyślnej wartości 0.5s dla czasu trwania klatki
+            String animatedGifBase64 = createAnimatedGifWithMotion(base64ImageData, frames, 0.5);
+            
+            // Tworzymy nowy obiekt GeneratedImage dla GIF-a
             GeneratedImage gif = new GeneratedImage();
             gif.setPrompt(prompt);
             gif.setStyle(style);
@@ -163,6 +193,12 @@ public class GifService {
             gif.setContentType("image/gif");
             gif.setSize("1024x1024");
             gif.setQuality("hd");
+            
+            // Ustawiamy URL do późniejszego użycia
+            String gifPath = tempDir + "/gif_" + gif.getFileName();
+            byte[] decodedGif = Base64.getDecoder().decode(animatedGifBase64);
+            Files.write(Path.of(gifPath), decodedGif);
+            gif.setImageUrl("file://" + gifPath);
             
             GeneratedImage savedGif = imageRepository.save(gif);
             System.out.println("Zapisano animowany GIF z ID=" + savedGif.getId());
@@ -186,6 +222,37 @@ public class GifService {
             
             throw new RuntimeException("Nie udało się utworzyć GIF-a: " + e.getMessage(), e);
         }
+    }
+
+    // Konwersja stylu dla API OpenAI
+    private String convertStyle(String style) {
+        if ("realistic".equalsIgnoreCase(style)) {
+            return "natural";
+        } else if ("artistic".equalsIgnoreCase(style) || "cartoon".equalsIgnoreCase(style)) {
+            return "vivid";
+        }
+        return "natural"; // domyślny styl
+    }
+
+    // Ulepszanie prompta dla generowania bardziej realistycznych GIF-ów
+    private String enhancePromptForGifGeneration(String originalPrompt, String style) {
+        String basePrompt = originalPrompt;
+        
+        switch (style.toLowerCase()) {
+            case "realistic":
+                basePrompt += " Ultra realistic, photorealistic, cinematic quality, smooth motion, perfect for an animated sequence, consistent lighting and composition between frames, high detail preservation.";
+                break;
+            case "cartoon":
+                basePrompt += " Cartoon style animation, smooth transitions, bright colors, expressive movement, stylized with clean lines, consistent character design across frames.";
+                break;
+            case "artistic":
+                basePrompt += " Artistic animation style, creative movement, vivid colors, stylized interpretation, painterly quality, expressive motion, cohesive artistic vision across frames.";
+                break;
+            default:
+                basePrompt += " Smooth animation sequence, consistent style across frames, fluid motion, natural transitions, high quality rendering.";
+        }
+        
+        return basePrompt;
     }
 
     private GeneratedImage generateSingleImage(String prompt, String style) {
@@ -240,14 +307,22 @@ public class GifService {
                     if (base64Image != null) {
                         System.out.println("Otrzymano dane obrazu, długość: " + base64Image.length());
                         
+                        String fileName = UUID.randomUUID().toString() + ".png";
+                        
+                        // Tworzymy plik na dysku z wygenerowanym obrazem
+                        String imagePath = tempDir + "/" + fileName;
+                        byte[] decodedImage = Base64.getDecoder().decode(base64Image);
+                        Files.write(Path.of(imagePath), decodedImage);
+                        
                         GeneratedImage image = new GeneratedImage();
                         image.setPrompt(prompt);
                         image.setStyle(style);
-                        image.setFileName(UUID.randomUUID().toString() + ".png");
+                        image.setFileName(fileName);
                         image.setImageData(base64Image);
                         image.setContentType("image/png");
                         image.setSize("1024x1024");
                         image.setQuality("hd");
+                        image.setImageUrl("file://" + imagePath);
                         
                         return imageRepository.save(image);
                     }
@@ -263,7 +338,8 @@ public class GifService {
         }
     }
 
-    private String createAnimatedGifWithMotion(String baseImageBase64, int frames) {
+    // Zmodyfikowana metoda, aby obsługiwać czas trwania klatki jako parametr
+    private String createAnimatedGifWithMotion(String baseImageBase64, int frames, double frameDuration) {
         try {
             // Dekodujemy bazowy obraz
             byte[] imageData = Base64.getDecoder().decode(baseImageBase64);
@@ -287,8 +363,11 @@ public class GifService {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ImageOutputStream ios = ImageIO.createImageOutputStream(outputStream);
             
+            // Konwersja czasu trwania klatki z sekund na milisekundy
+            int delayMs = (int)(frameDuration * 1000);
+            
             // Używamy obrazu ARGB dla lepszej jakości
-            GifSequenceWriter writer = new GifSequenceWriter(ios, BufferedImage.TYPE_INT_ARGB, 150, true);
+            GifSequenceWriter writer = new GifSequenceWriter(ios, BufferedImage.TYPE_INT_ARGB, delayMs, true);
             
             // Dodajemy wszystkie klatki do sekwencji
             for (BufferedImage frame : animationFrames) {
@@ -382,6 +461,19 @@ public class GifService {
             System.out.println("Błąd podczas tworzenia efektu ruchu: " + e.getMessage());
             return original; // Zwracamy oryginalny obraz w przypadku błędu
         }
+    }
+
+    // Metody z nowego interfejsu
+    public List<GeneratedGif> getLatestGifs() {
+        return gifRepository.findTop10ByOrderByCreatedAtDesc();
+    }
+    
+    public List<GeneratedGif> searchGifsByPrompt(String prompt) {
+        return gifRepository.findByPromptContainingIgnoreCase(prompt);
+    }
+    
+    public List<GeneratedGif> getGifsByStyle(String style) {
+        return gifRepository.findByStyle(style);
     }
 
     // Klasa pomocnicza do generowania sekwencji GIF

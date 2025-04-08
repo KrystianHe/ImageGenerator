@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator GIF - AI API</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+        }
+        .container {
+            max-width: 900px;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #6a0dad;
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: bold;
+        }
+        .result-container {
+            display: none;
+            margin-top: 30px;
+        }
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .gif-result {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .info-label {
+            font-weight: bold;
+            color: #6a0dad;
+        }
+        .preview-frames {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        .frame-img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 2px solid #ddd;
+            transition: transform 0.2s;
+        }
+        .frame-img:hover {
+            transform: scale(1.05);
+            border-color: #6a0dad;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Zaawansowany Generator GIF-ów AI</h1>
+        
+        <div class="card">
+            <div class="card-header">
+                Parametry generowania GIF-a
+            </div>
+            <div class="card-body">
+                <form id="gif-form">
+                    <div class="mb-3">
+                        <label for="prompt" class="form-label">Opis GIF-a:</label>
+                        <textarea class="form-control" id="prompt" rows="3" placeholder="Opisz scenę, którą chcesz wygenerować jako GIF..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="frames-count" class="form-label">Liczba klatek:</label>
+                            <input type="range" class="form-range" id="frames-count" min="3" max="10" value="5">
+                            <div class="d-flex justify-content-between">
+                                <small>3</small>
+                                <small id="frames-value">5</small>
+                                <small>10</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="frame-duration" class="form-label">Czas trwania klatki (s):</label>
+                            <input type="range" class="form-range" id="frame-duration" min="0.1" max="1" step="0.1" value="0.5">
+                            <div class="d-flex justify-content-between">
+                                <small>0.1s</small>
+                                <small id="duration-value">0.5s</small>
+                                <small>1.0s</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="size" class="form-label">Rozmiar:</label>
+                            <select class="form-select" id="size">
+                                <option value="1024x1024">Kwadratowy (1024x1024)</option>
+                                <option value="1024x1792">Pionowy (1024x1792)</option>
+                                <option value="1792x1024">Poziomy (1792x1024)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="style" class="form-label">Styl:</label>
+                            <select class="form-select" id="style">
+                                <option value="realistic">Realistyczny</option>
+                                <option value="cartoon">Kreskówkowy</option>
+                                <option value="artistic">Artystyczny</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="quality" class="form-label">Jakość:</label>
+                            <select class="form-select" id="quality">
+                                <option value="hd">Wysoka (HD)</option>
+                                <option value="standard">Standardowa</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" style="background-color: #6a0dad; border-color: #6a0dad;">Generuj GIF</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="loader">
+            <div class="spinner-border text-primary" role="status" style="color: #6a0dad !important;">
+                <span class="visually-hidden">Generowanie...</span>
+            </div>
+            <p>Generowanie GIF-a może potrwać kilka minut...</p>
+            <div class="progress mt-3">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%; background-color: #6a0dad;" id="progress-bar"></div>
+            </div>
+        </div>
+        
+        <div class="result-container">
+            <div class="card">
+                <div class="card-header">
+                    Wygenerowany GIF
+                </div>
+                <div class="card-body text-center">
+                    <img id="gif-result" class="gif-result mb-3" src="" alt="Wygenerowany GIF">
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <p><span class="info-label">Opis:</span> <span id="result-prompt"></span></p>
+                            <p><span class="info-label">Styl:</span> <span id="result-style"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><span class="info-label">Liczba klatek:</span> <span id="result-frames"></span></p>
+                            <p><span class="info-label">Czas generowania:</span> <span id="result-time"></span> s</p>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-frames" id="frames-preview">
+                        <!-- Tutaj będą wyświetlane podglądy klatek -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Aktualizacja wartości suwaków
+        document.getElementById('frames-count').addEventListener('input', function() {
+            document.getElementById('frames-value').textContent = this.value;
+        });
+        
+        document.getElementById('frame-duration').addEventListener('input', function() {
+            document.getElementById('duration-value').textContent = this.value + 's';
+        });
+        
+        // Obsługa formularza
+        document.getElementById('gif-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const prompt = document.getElementById('prompt').value;
+            if (!prompt) {
+                alert('Wprowadź opis GIF-a!');
+                return;
+            }
+            
+            const request = {
+                prompt: prompt,
+                framesCount: parseInt(document.getElementById('frames-count').value),
+                frameDuration: parseFloat(document.getElementById('frame-duration').value),
+                size: document.getElementById('size').value,
+                style: document.getElementById('style').value,
+                quality: document.getElementById('quality').value
+            };
+            
+            // Pokazujemy loader i ukrywamy wyniki
+            document.querySelector('.loader').style.display = 'block';
+            document.querySelector('.result-container').style.display = 'none';
+            
+            // Symulacja postępu generowania
+            let progress = 0;
+            const progressBar = document.getElementById('progress-bar');
+            const progressInterval = setInterval(() => {
+                progress += 1;
+                if (progress > 95) {
+                    clearInterval(progressInterval);
+                } else {
+                    progressBar.style.width = progress + '%';
+                }
+            }, 500);
+            
+            // Wysyłamy zapytanie do API
+            fetch('/api/gifs/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(request)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Wystąpił błąd podczas generowania GIF-a');
+                }
+                return response.json();
+            })
+            .then(data => {
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                
+                // Wypełniamy wyniki
+                document.getElementById('gif-result').src = 'data:image/gif;base64,' + data.gifBase64;
+                document.getElementById('result-prompt').textContent = data.originalPrompt;
+                document.getElementById('result-style').textContent = request.style;
+                document.getElementById('result-frames').textContent = data.framesGenerated;
+                document.getElementById('result-time').textContent = (data.generationTimeMs / 1000).toFixed(2);
+                
+                // Ukrywamy loader i pokazujemy wyniki
+                setTimeout(() => {
+                    document.querySelector('.loader').style.display = 'none';
+                    document.querySelector('.result-container').style.display = 'block';
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                alert('Wystąpił błąd: ' + error.message);
+                document.querySelector('.loader').style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html> 

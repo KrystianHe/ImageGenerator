@@ -10,15 +10,15 @@ import lombok.NoArgsConstructor;
 public class ImageGenerationRequest {
     private String prompt;
     private String size = "1024x1024"; // Domyślny rozmiar obrazu (inne opcje: 1024x1792, 1792x1024)
-    private Integer n = 1; // Domyślna liczba obrazów do wygenerowania
+    private int n = 1; // Domyślna liczba obrazów do wygenerowania
     private String style; // Styl obrazu: "natural" (bardziej realistyczny) lub "vivid" (bardziej kolorowy)
     private String quality; // Jakość obrazu: "standard" lub "hd"
     
-    public ImageGenerationRequest(String prompt, String size, Integer n) {
+    public ImageGenerationRequest(String prompt, String size, int n) {
         this.prompt = prompt;
         this.size = size;
         this.n = n;
-        this.style = "natural";
-        this.quality = "hd";
+        this.style = "natural"; // Domyślnie używamy bardziej realistycznego stylu
+        this.quality = "hd"; // Domyślnie używamy wysokiej jakości
     }
 } 

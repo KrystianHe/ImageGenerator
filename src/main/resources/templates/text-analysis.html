@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analiza Tekstu - AI API</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+        }
+        .container {
+            max-width: 900px;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #4b0082;
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: bold;
+        }
+        .analysis-result {
+            margin-top: 20px;
+            display: none;
+        }
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .sentiment-bar {
+            height: 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .sentiment-label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Analiza Tekstu AI</h1>
+        
+        <div class="card">
+            <div class="card-header">
+                Wprowadź tekst do analizy
+            </div>
+            <div class="card-body">
+                <form id="analysis-form">
+                    <div class="mb-3">
+                        <label for="text" class="form-label">Tekst do analizy:</label>
+                        <textarea class="form-control" id="text" rows="5" placeholder="Wprowadź tekst do analizy..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Lub wybierz plik tekstowy:</label>
+                        <input class="form-control" type="file" id="file" accept=".txt,.doc,.docx,.pdf">
+                        <div class="form-text">Obsługiwane formaty: TXT, DOC, DOCX, PDF</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Analizuj</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="loader">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Ładowanie...</span>
+            </div>
+            <p>Analizuję tekst...</p>
+        </div>
+        
+        <div class="analysis-result">
+            <div class="card">
+                <div class="card-header">
+                    Podsumowanie
+                </div>
+                <div class="card-body">
+                    <p id="summary"></p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    Kluczowe punkty
+                </div>
+                <div class="card-body">
+                    <ul id="key-points"></ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    Analiza sentymentu
+                </div>
+                <div class="card-body">
+                    <div id="sentiment-analysis"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    Dodatkowe informacje
+                </div>
+                <div class="card-body">
+                    <div id="additional-info"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('analysis-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const text = document.getElementById('text').value;
+            const fileInput = document.getElementById('file');
+            const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
+            
+            if (!text && !file) {
+                alert('Wprowadź tekst lub wybierz plik do analizy.');
+                return;
+            }
+            
+            const formData = new FormData();
+            if (text) formData.append('text', text);
+            if (file) formData.append('file', file);
+            
+            document.querySelector('.loader').style.display = 'block';
+            document.querySelector('.analysis-result').style.display = 'none';
+            
+            fetch('/api/text/analyze', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Wystąpił błąd podczas analizy tekstu');
+                }
+                return response.json();
+            })
+            .then(data => {
+                displayResults(data);
+                document.querySelector('.loader').style.display = 'none';
+                document.querySelector('.analysis-result').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Wystąpił błąd: ' + error.message);
+                document.querySelector('.loader').style.display = 'none';
+            });
+        });
+        
+        function displayResults(data) {
+            // Podsumowanie
+            document.getElementById('summary').textContent = data.summary;
+            
+            // Kluczowe punkty
+            const keyPointsList = document.getElementById('key-points');
+            keyPointsList.innerHTML = '';
+            data.keyPoints.forEach(point => {
+                const li = document.createElement('li');
+                li.textContent = point;
+                keyPointsList.appendChild(li);
+            });
+            
+            // Analiza sentymentu
+            const sentimentDiv = document.getElementById('sentiment-analysis');
+            sentimentDiv.innerHTML = '';
+            
+            Object.entries(data.sentimentAnalysis).forEach(([sentiment, value]) => {
+                const sentimentContainer = document.createElement('div');
+                sentimentContainer.classList.add('mb-3');
+                
+                const label = document.createElement('div');
+                label.classList.add('sentiment-label');
+                label.textContent = `${sentiment}: ${value}/10`;
+                
+                const bar = document.createElement('div');
+                bar.classList.add('progress');
+                
+                const barInner = document.createElement('div');
+                barInner.classList.add('progress-bar', 'sentiment-bar');
+                
+                // Określenie koloru paska w zależności od sentymenta
+                if (sentiment.toLowerCase() === 'pozytywny') {
+                    barInner.classList.add('bg-success');
+                } else if (sentiment.toLowerCase() === 'neutralny') {
+                    barInner.classList.add('bg-info');
+                } else if (sentiment.toLowerCase() === 'negatywny') {
+                    barInner.classList.add('bg-danger');
+                }
+                
+                barInner.style.width = `${value * 10}%`;
+                barInner.setAttribute('aria-valuenow', value);
+                barInner.setAttribute('aria-valuemin', 0);
+                barInner.setAttribute('aria-valuemax', 10);
+                
+                bar.appendChild(barInner);
+                sentimentContainer.appendChild(label);
+                sentimentContainer.appendChild(bar);
+                sentimentDiv.appendChild(sentimentContainer);
+            });
+            
+            // Dodatkowe informacje
+            const additionalInfoDiv = document.getElementById('additional-info');
+            additionalInfoDiv.innerHTML = '';
+            
+            Object.entries(data.additionalInfo).forEach(([key, value]) => {
+                const p = document.createElement('p');
+                p.innerHTML = `<strong>${key}:</strong> ${value}`;
+                additionalInfoDiv.appendChild(p);
+            });
+        }
+    </script>
+</body>
+</html> 
